@@ -1,4 +1,5 @@
 package org.example;
+
 // Importamos las clases necesarias para trabajar con sockets, entrada/salida y leer por teclado.
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -6,12 +7,13 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.Scanner;
 
-// Este programa es el CLIENTE del juego "Piedra, Papel o Tijeras".
+// Este programa es el CLIENTE 2 del juego "Piedra, Papel o Tijeras".
 // Se conecta a un servidor por TCP, juega varias rondas y muestra quién gana.
 public class ClientePiedraPapelTijera {
 
     // IP del servidor. Si jugamos en el mismo ordenador, usamos "localhost".
-    // Si jugamos en red, hay que poner la IP del otro ordenador (se ve con ipconfig).
+    // Si jugamos en red, hay que poner la IP del otro ordenador (se ve con
+    // ipconfig).
     private static final String IP_SERVIDOR = "localhost";
 
     // Puerto que usa el servidor. Debe estar libre y entre 1024 y 49151.
@@ -85,9 +87,12 @@ public class ClientePiedraPapelTijera {
         } finally {
             // Cerramos todo por si acaso.
             try {
-                if (entrada != null) entrada.close();
-                if (salida != null) salida.close();
-                if (socket != null && !socket.isClosed()) socket.close();
+                if (entrada != null)
+                    entrada.close();
+                if (salida != null)
+                    salida.close();
+                if (socket != null && !socket.isClosed())
+                    socket.close();
             } catch (IOException e) {
                 // No hacemos nada si falla el cierre.
             }
@@ -127,21 +132,26 @@ public class ClientePiedraPapelTijera {
     // Convierte el número de jugada a texto para mostrarlo por pantalla.
     private static String convertirJugadaTexto(int jugada) {
         switch (jugada) {
-            case 1: return "Piedra";
-            case 2: return "Papel";
-            case 3: return "Tijeras";
-            default: return "Desconocido";
+            case 1:
+                return "Piedra";
+            case 2:
+                return "Papel";
+            case 3:
+                return "Tijeras";
+            default:
+                return "Desconocido";
         }
     }
 
     // Compara las dos jugadas y devuelve el resultado:
     // 1 si gana el cliente, -1 si gana el servidor, 0 si empate.
     private static int calcularResultado(int cliente, int servidor) {
-        if (cliente == servidor) return 0;
+        if (cliente == servidor)
+            return 0;
 
         if ((cliente == 1 && servidor == 3) ||
-            (cliente == 2 && servidor == 1) ||
-            (cliente == 3 && servidor == 2)) {
+                (cliente == 2 && servidor == 1) ||
+                (cliente == 3 && servidor == 2)) {
             return 1;
         } else {
             return -1;
