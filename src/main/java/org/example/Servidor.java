@@ -75,7 +75,7 @@ public class Servidor {
                 // ==========================================================
                 System.out.println("Esperando a Player1...");
                 // SE ACEPTA LA CONEXIÓN DEL PRIMER CLIENTE (PLAYER1)
-                // El método .accept() bloquea la ejecución hasta que llega un cliente.
+                // El metodo .accept() bloquea la ejecución hasta que llega un cliente.
                 Socket socketPlayer1 = servidor.accept();
                 System.out.println("Player1 conectado desde la IP: " + socketPlayer1.getInetAddress());
 
@@ -369,7 +369,7 @@ public class Servidor {
         int[] antes = new int[] { gameHostPuntos, player1Puntos, player2Puntos };
         int[] despues;
 
-        // CASO: TRES JUGADORES VIVOS → LÓGICA DE 3 JUGADORES
+        // CASO: TRES JUGADORES VIVOS -> LÓGICA DE 3 JUGADORES
         if (vivos == 3) {
             despues = procesarRonda3Jugadores(
                     gameHostMove, player1Move, player2Move,
@@ -401,7 +401,7 @@ public class Servidor {
         return new int[] { despues[0], despues[1], despues[2], deltaHost, deltaP1, deltaP2 };
     }
 
-    // PROCESA UNA RONDA DE 3 JUGADORES CON LÓGICA COMPLETA Y SIN REDUNDANCIAS
+    // PROCESA UNA RONDA DE 3 JUGADORES
     private static int[] procesarRonda3Jugadores(
             int gameHostMove, int player1Move, int player2Move,
             int gameHostPuntos, int player1Puntos, int player2Puntos) {
