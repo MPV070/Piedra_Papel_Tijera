@@ -1,20 +1,21 @@
 package org.example;
-// Importamos las clases necesarias para trabajar con sockets, entrada/salida y leer por teclado.
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Scanner;
 
-// Este programa es el CLIENTE del juego "Piedra, Papel o Tijeras".
-// Se conecta a un servidor por TCP, juega varias rondas y muestra quién gana.
+// Cliente del juego Piedra-Papel-Tijeras.
+// Este programa se conecta al servidor por TCP y juega contra él.
+// El usuario elige su jugada y el servidor responde con la suya.
 public class ClientePiedraPapelTijera {
 
-    // IP del servidor. Si jugamos en el mismo ordenador, usamos "localhost".
-    // Si jugamos en red, hay que poner la IP del otro ordenador (se ve con ipconfig).
-    private static final String IP_SERVIDOR = "localhost";
+    // Aquí pongo la IP del servidor. Esta IP la tiene que dar la persona que ejecuta el servidor.
+    // Si estuviéramos en el mismo PC sería "localhost", pero como es en red, pongo su IPv4.
+    private static final String IP_SERVIDOR = "192.168.0.26";
 
-    // Puerto que usa el servidor. Debe estar libre y entre 1024 y 49151.
+    // Puerto que usa el servidor. Tiene que ser el mismo en ambos programas.
     private static final int PUERTO_SERVIDOR = 5000;
 
     public static void main(String[] args) {
@@ -24,78 +25,77 @@ public class ClientePiedraPapelTijera {
         Scanner teclado = new Scanner(System.in);
 
         try {
-            // Intentamos conectar con el servidor usando IP y puerto.
+            // Intento conectarme al servidor usando su IP y puerto.
             System.out.println("Conectando con el servidor...");
             socket = new Socket(IP_SERVIDOR, PUERTO_SERVIDOR);
-            System.out.println("Conexión establecida.");
+            System.out.println("Conexión establecida correctamente.");
 
-            // Creamos los canales para enviar y recibir datos.
+            // Creo los flujos para enviar y recibir datos.
             entrada = new DataInputStream(socket.getInputStream());
             salida = new DataOutputStream(socket.getOutputStream());
 
             int puntosCliente = 0;
             int puntosServidor = 0;
 
-            // Bucle del juego: seguimos jugando hasta que alguien llegue a 3 puntos.
+            // Mientras ninguno llegue a 3 puntos, seguimos jugando.
             while (puntosCliente < 3 && puntosServidor < 3) {
 
-                // Pedimos al usuario que elija piedra, papel o tijeras.
+                // Pido al usuario que elija piedra, papel o tijeras.
                 int jugadaCliente = pedirJugadaUsuario(teclado);
 
-                // Enviamos la jugada al servidor.
+                // Envío la jugada al servidor.
                 salida.writeInt(jugadaCliente);
                 salida.flush();
 
-                // Recibimos la jugada del servidor.
+                // Recibo la jugada del servidor.
                 int jugadaServidor = entrada.readInt();
                 System.out.println("El servidor ha elegido: " + convertirJugadaTexto(jugadaServidor));
 
-                // Comparamos las jugadas y vemos quién gana esta ronda.
+                // Comparo las jugadas para ver quién gana la ronda.
                 int resultado = calcularResultado(jugadaCliente, jugadaServidor);
 
                 if (resultado == 1) {
                     puntosCliente++;
-                    System.out.println("¡Ganaste esta ronda!");
+                    System.out.println("Has ganado esta ronda.");
                 } else if (resultado == -1) {
                     puntosServidor++;
-                    System.out.println("Perdiste esta ronda.");
+                    System.out.println("Has perdido esta ronda.");
                 } else {
                     System.out.println("Empate.");
                 }
 
-                // Mostramos el marcador actual.
+                // Muestro el marcador para que se vea cómo va la partida.
                 System.out.println("Marcador -> Tú: " + puntosCliente + " | Servidor: " + puntosServidor);
                 System.out.println("-------------------------------------------");
             }
 
-            // Mensaje final según quién haya ganado.
+            // Cuando alguien llega a 3 puntos, mostramos el ganador.
             if (puntosCliente == 3) {
                 System.out.println("¡Has ganado la partida!");
             } else {
                 System.out.println("El servidor ha ganado la partida.");
             }
 
-            // Cerramos la conexión con el servidor.
+            // Cierro la conexión cuando termina el juego.
             System.out.println("Cerrando conexión...");
             socket.close();
             System.out.println("Conexión cerrada.");
 
         } catch (IOException e) {
+            // Si algo falla al conectar o enviar/recibir datos, lo muestro.
             System.out.println("Error al conectar con el servidor: " + e.getMessage());
         } finally {
-            // Cerramos todo por si acaso.
+            // Cierro todo por si acaso.
             try {
                 if (entrada != null) entrada.close();
                 if (salida != null) salida.close();
                 if (socket != null && !socket.isClosed()) socket.close();
-            } catch (IOException e) {
-                // No hacemos nada si falla el cierre.
-            }
+            } catch (IOException e) {}
             teclado.close();
         }
     }
 
-    // Esta función pide al usuario que elija una jugada válida (1, 2 o 3).
+    // Esta función pide al usuario una jugada válida (1, 2 o 3).
     private static int pedirJugadaUsuario(Scanner teclado) {
         int jugada = 0;
         boolean valida = false;
@@ -112,11 +112,11 @@ public class ClientePiedraPapelTijera {
                 if (jugada >= 1 && jugada <= 3) {
                     valida = true;
                 } else {
-                    System.out.println("Número incorrecto. Debe ser 1, 2 o 3.");
+                    System.out.println("Ese número no vale, tiene que ser 1, 2 o 3.");
                 }
             } else {
-                System.out.println("Eso no es un número. Intenta otra vez.");
-                teclado.next(); // Limpiamos la entrada incorrecta.
+                System.out.println("Eso no es un número. Inténtalo otra vez.");
+                teclado.next(); // Limpio la entrada incorrecta.
             }
         }
 
@@ -124,7 +124,7 @@ public class ClientePiedraPapelTijera {
         return jugada;
     }
 
-    // Convierte el número de jugada a texto para mostrarlo por pantalla.
+    // Convierte el número de jugada a texto para mostrarlo más claro.
     private static String convertirJugadaTexto(int jugada) {
         switch (jugada) {
             case 1: return "Piedra";
@@ -134,8 +134,8 @@ public class ClientePiedraPapelTijera {
         }
     }
 
-    // Compara las dos jugadas y devuelve el resultado:
-    // 1 si gana el cliente, -1 si gana el servidor, 0 si empate.
+    // Aquí comparo las jugadas y devuelvo quién gana.
+    // 1 = gana el cliente, -1 = gana el servidor, 0 = empate.
     private static int calcularResultado(int cliente, int servidor) {
         if (cliente == servidor) return 0;
 
