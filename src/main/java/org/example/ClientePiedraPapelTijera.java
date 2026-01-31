@@ -11,9 +11,6 @@ import java.util.Scanner;
 // Se conecta a un servidor por TCP, juega varias rondas y muestra quién gana.
 public class ClientePiedraPapelTijera {
 
-    // IP del servidor. Si jugamos en el mismo ordenador, usamos "localhost".
-    // Si jugamos en red, hay que poner la IP del otro ordenador (se ve con
-    // ipconfig).
     private static final String IP_SERVIDOR = "localhost";
 
     // Puerto que usa el servidor. Debe estar libre y entre 1024 y 49151.
