@@ -162,7 +162,6 @@ public class Servidor {
                             // Gestión de desconexión abrupta de P1
                             System.out.println("Player1 disconnected or sent invalid data: " + e.getMessage());
                             eliminatedPlayer1 = true;
-                            player1Move = -1;
                             try {
                                 escritorPlayer1.println("ELIMINADO");
                             } catch (Exception ignored) {
@@ -175,10 +174,7 @@ public class Servidor {
                                 escritorPlayer1.close();
                             } catch (Exception ignored) {
                             }
-                            try {
-                                socketPlayer1.close();
-                            } catch (Exception ignored) {
-                            }
+                            cerrarSocketSafe(socketPlayer1);
                             if (!modoUnicoCliente) {
                                 try {
                                     escritorPlayer2.println("OPPONENT_DISCONNECTED");
@@ -210,12 +206,7 @@ public class Servidor {
                                 escritorPlayer2.close();
                             } catch (Exception ignored) {
                             }
-                            if (socketPlayer2 != null) {
-                                try {
-                                    socketPlayer2.close();
-                                } catch (Exception ignored) {
-                                }
-                            }
+                            cerrarSocketSafe(socketPlayer2);
                             try {
                                 if (!eliminatedPlayer1)
                                     escritorPlayer1.println("OPPONENT_DISCONNECTED");
@@ -268,16 +259,8 @@ public class Servidor {
                 // ==========================================================
                 // CIERRE DE CONEXIONES DE LOS JUGADORES (PERO NO DEL SERVIDOR PRINCIPAL)
                 System.out.println("Fin de la partida. Cerrando conexiones con clientes...");
-                try {
-                    socketPlayer1.close();
-                } catch (Exception e) {
-                }
-                if (socketPlayer2 != null) {
-                    try {
-                        socketPlayer2.close();
-                    } catch (Exception e) {
-                    }
-                }
+                cerrarSocketSafe(socketPlayer1);
+                cerrarSocketSafe(socketPlayer2);
             }
 
             // ==========================================================
@@ -656,5 +639,16 @@ public class Servidor {
         if (dp < 0)
             return String.valueOf(dp);
         return "+0";
+    }
+
+    // MÉTODO AUXILIAR PARA CERRAR SOCKETS DE FORMA SEGURA
+    private static void cerrarSocketSafe(Socket socket) {
+        if (socket != null && !socket.isClosed()) {
+            try {
+                socket.close();
+            } catch (IOException e) {
+                System.out.println("Error al cerrar socket: " + e.getMessage());
+            }
+        }
     }
 }
