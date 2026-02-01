@@ -245,12 +245,12 @@ public class Servidor {
                                 player2Puntos, eliminatedPlayer2, escritorPlayer2, "Player2");
                     }
 
-                    // 5. MOSTRAR EL MARCADOR ACTUAL AL SERVIDOR
+                    // 5. MOSTRAR EL MARCADOR ACTUAL AL SERVIDOR Y A LOS CLIENTES
                     mostrarMarcador(
                             gameHostPuntos, player1Puntos, player2Puntos,
                             eliminatedPlayer1, eliminatedPlayer2,
                             deltaHost, deltaPlayer1, deltaPlayer2,
-                            rondas);
+                            rondas, escritorPlayer1, escritorPlayer2);
                 }
 
                 // ==========================================================
@@ -598,12 +598,13 @@ public class Servidor {
         return eliminado;
     }
 
-    // MUESTRA EL MARCADOR ACTUAL DE LA PARTIDA
+    // MUESTRA EL MARCADOR ACTUAL DE LA PARTIDA Y LO ENVÍA A LOS CLIENTES
     private static void mostrarMarcador(
             int gameHostPuntos, int player1Puntos, int player2Puntos,
             boolean eliminatedPlayer1, boolean eliminatedPlayer2,
             int deltaHost, int deltaPlayer1, int deltaPlayer2,
-            int rondas) {
+            int rondas, PrintWriter escritorPlayer1, PrintWriter escritorPlayer2) {
+
         System.out.println("\n--- MARCADOR (Ronda " + rondas + ") ---");
         System.out.println("Host: " + gameHostPuntos + " (" + formatDelta(deltaHost) + ")");
         System.out.println("Player1: " + player1Puntos + " (" + formatDelta(deltaPlayer1) + ")"
@@ -611,6 +612,24 @@ public class Servidor {
         System.out.println("Player2: " + player2Puntos + " (" + formatDelta(deltaPlayer2) + ")"
                 + (eliminatedPlayer2 ? " (ELIMINADO)" : ""));
         System.out.println("----------------\n");
+
+        // CONSTRUIR EL MENSAJE DE PROTOCOLO PARA LOS CLIENTES
+        // Formato: MARCADOR:host,p1,p2,elim1,elim2,dH,dP1,dP2,ronda
+        String mensaje = String.format("MARCADOR:%d,%d,%d,%b,%b,%d,%d,%d,%d",
+                gameHostPuntos, player1Puntos, player2Puntos,
+                eliminatedPlayer1, eliminatedPlayer2,
+                deltaHost, deltaPlayer1, deltaPlayer2,
+                rondas);
+
+        // ENVIAR A PLAYER 1
+        if (escritorPlayer1 != null) {
+            escritorPlayer1.println(mensaje);
+        }
+
+        // ENVIAR A PLAYER 2
+        if (escritorPlayer2 != null) {
+            escritorPlayer2.println(mensaje);
+        }
     }
 
     private static String formatDelta(int d) {
