@@ -114,11 +114,15 @@ public class Servidor {
                 int player1Puntos = 0;
                 int player2Puntos = 0;
 
-                // RONDAS Y DELTAS (por ronda: puntos ganados/perdidos en la última jugada)
+                // RONDAS Y DELTAS (deltaPuntos)
+                // 'deltaPuntos' representa la variación de puntos en la última ronda.
+                // Es decir: Puntos_Actuales - Puntos_Anteriores.
+                // Si ganas, deltaPuntos será +1. Si pierdes, -1. Si empatas, 0.
+                // Esto sirve para mostrarle al usuario qué pasó en la jugada reciente.
                 int rondas = 0;
-                int deltaHost = 0;
-                int deltaPlayer1 = 0;
-                int deltaPlayer2 = 0;
+                int deltaPuntosHost = 0;
+                int deltaPuntosPlayer1 = 0;
+                int deltaPuntosPlayer2 = 0;
 
                 // ESTADOS DE ELIMINACIÓN (cuando un jugador llega a una puntuación muy baja)
                 boolean eliminatedPlayer1 = false;
@@ -221,18 +225,24 @@ public class Servidor {
                     }
 
                     // 3. PROCESAR LA RONDA (CALCULAR GANADORES LOCALES Y ACTUALIZAR PUNTOS)
+                    // Esta función devuelve un array con los NUEVOS puntos y los DELTAS.
+                    // Los deltas nos dicen cuánto cambiaron los puntos en esta ronda específica.
                     int[] resultadoRonda = procesarRonda(
                             gameHostMove, player1Move, player2Move,
                             gameHostPuntos, player1Puntos, player2Puntos,
                             eliminatedPlayer1, eliminatedPlayer2, modoUnicoCliente);
 
                     // Actualizar variables con los resultados de la ronda
+                    // Índices 0, 1, 2 -> Nuevas puntuaciones totales
                     gameHostPuntos = resultadoRonda[0];
                     player1Puntos = resultadoRonda[1];
                     player2Puntos = resultadoRonda[2];
-                    deltaHost = resultadoRonda[3];
-                    deltaPlayer1 = resultadoRonda[4];
-                    deltaPlayer2 = resultadoRonda[5];
+
+                    // Índices 3, 4, 5 -> Deltas (Variación de puntos en esta ronda)
+                    // Esto permite mostrar "+1", "-1" o "0" en el marcador
+                    deltaPuntosHost = resultadoRonda[3];
+                    deltaPuntosPlayer1 = resultadoRonda[4];
+                    deltaPuntosPlayer2 = resultadoRonda[5];
 
                     // Incrementar contador de rondas
                     rondas++;
@@ -249,7 +259,7 @@ public class Servidor {
                     mostrarMarcador(
                             gameHostPuntos, player1Puntos, player2Puntos,
                             eliminatedPlayer1, eliminatedPlayer2,
-                            deltaHost, deltaPlayer1, deltaPlayer2,
+                            deltaPuntosHost, deltaPuntosPlayer1, deltaPuntosPlayer2,
                             rondas, escritorPlayer1, escritorPlayer2);
                 }
 
@@ -342,13 +352,13 @@ public class Servidor {
 
     // AJUSTA PUNTOS PARA UN JUGADOR ESPECÍFICO DENTRO DEL ARRAY [gameHost, player1,
     // player2]
-    private static void cambiarPuntos(int[] puntos, String jugador, int delta) {
+    private static void cambiarPuntos(int[] puntos, String jugador, int deltaPuntos) {
         if ("GAMEHOST".equals(jugador))
-            puntos[0] += delta;
+            puntos[0] += deltaPuntos;
         else if ("PLAYER1".equals(jugador))
-            puntos[1] += delta;
+            puntos[1] += deltaPuntos;
         else if ("PLAYER2".equals(jugador))
-            puntos[2] += delta;
+            puntos[2] += deltaPuntos;
     }
 
     // PROCESA UNA RONDA COMPLETA SEGÚN CUÁNTOS JUGADORES SIGUEN VIVOS
@@ -394,11 +404,17 @@ public class Servidor {
             despues = new int[] { gameHostPuntos, player1Puntos, player2Puntos };
         }
 
-        int deltaHost = despues[0] - antes[0];
-        int deltaP1 = despues[1] - antes[1];
-        int deltaP2 = despues[2] - antes[2];
+        // CÁLCULO DE DELTAPUNTOS (LA CLAVE PARA EXPLICAR QUÉ PASÓ EN LA RONDA)
+        // deltaPuntos = Puntos_Después_De_La_Ronda - Puntos_Antes_De_La_Ronda
+        int deltaPuntosHost = despues[0] - antes[0];
+        int deltaPuntosPlayer1 = despues[1] - antes[1];
+        int deltaPuntosPlayer2 = despues[2] - antes[2];
 
-        return new int[] { despues[0], despues[1], despues[2], deltaHost, deltaP1, deltaP2 };
+        // Retornamos un array con TODA la información:
+        // [0-2]: Puntuaciones Totales Actualizadas
+        // [3-5]: Deltas (el cambio ocurrido en esta ronda)
+        return new int[] { despues[0], despues[1], despues[2], deltaPuntosHost, deltaPuntosPlayer1,
+                deltaPuntosPlayer2 };
     }
 
     // PROCESA UNA RONDA DE 3 JUGADORES
@@ -602,23 +618,25 @@ public class Servidor {
     private static void mostrarMarcador(
             int gameHostPuntos, int player1Puntos, int player2Puntos,
             boolean eliminatedPlayer1, boolean eliminatedPlayer2,
-            int deltaHost, int deltaPlayer1, int deltaPlayer2,
+            int deltaPuntosHost, int deltaPuntosPlayer1, int deltaPuntosPlayer2,
             int rondas, PrintWriter escritorPlayer1, PrintWriter escritorPlayer2) {
 
         System.out.println("\n--- MARCADOR (Ronda " + rondas + ") ---");
-        System.out.println("Host: " + gameHostPuntos + " (" + formatDelta(deltaHost) + ")");
-        System.out.println("Player1: " + player1Puntos + " (" + formatDelta(deltaPlayer1) + ")"
+        System.out.println("Host: " + gameHostPuntos + " (" + formatDeltaPuntos(deltaPuntosHost) + ")");
+        System.out.println("Player1: " + player1Puntos + " (" + formatDeltaPuntos(deltaPuntosPlayer1) + ")"
                 + (eliminatedPlayer1 ? " (ELIMINADO)" : ""));
-        System.out.println("Player2: " + player2Puntos + " (" + formatDelta(deltaPlayer2) + ")"
+        System.out.println("Player2: " + player2Puntos + " (" + formatDeltaPuntos(deltaPuntosPlayer2) + ")"
                 + (eliminatedPlayer2 ? " (ELIMINADO)" : ""));
         System.out.println("----------------\n");
 
         // CONSTRUIR EL MENSAJE DE PROTOCOLO PARA LOS CLIENTES
+        // Se envía toda la información el estado del juego, incluyendo los deltas.
+        // El cliente analizará los deltas para saber si ganó, perdió o empató la ronda.
         // Formato: MARCADOR:host,p1,p2,elim1,elim2,dH,dP1,dP2,ronda
         String mensaje = String.format("MARCADOR:%d,%d,%d,%b,%b,%d,%d,%d,%d",
                 gameHostPuntos, player1Puntos, player2Puntos,
                 eliminatedPlayer1, eliminatedPlayer2,
-                deltaHost, deltaPlayer1, deltaPlayer2,
+                deltaPuntosHost, deltaPuntosPlayer1, deltaPuntosPlayer2,
                 rondas);
 
         // ENVIAR A PLAYER 1
@@ -632,11 +650,11 @@ public class Servidor {
         }
     }
 
-    private static String formatDelta(int d) {
-        if (d > 0)
-            return "+" + d;
-        if (d < 0)
-            return String.valueOf(d);
+    private static String formatDeltaPuntos(int dp) {
+        if (dp > 0)
+            return "+" + dp;
+        if (dp < 0)
+            return String.valueOf(dp);
         return "+0";
     }
 }
