@@ -28,7 +28,7 @@ public class Cliente {
 
             try {
                 InetAddress.getByName(ip);
-                break; // IP válida
+                break;
             } catch (UnknownHostException e) {
                 System.out.println("❌ IP no válida. Inténtalo de nuevo.");
             }
@@ -52,47 +52,60 @@ public class Cliente {
 
         // ===== CONEXIÓN AL SERVIDOR =====
         try (Socket socket = new Socket(ip, puerto);
-             BufferedReader entrada = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-             PrintWriter salida = new PrintWriter(socket.getOutputStream(), true)) {
+             BufferedReader entrada = new BufferedReader(
+                     new InputStreamReader(socket.getInputStream()));
+             PrintWriter salida = new PrintWriter(
+                     socket.getOutputStream(), true)) {
 
             System.out.println("✅ Conectado al servidor.");
 
-            // El servidor controla la lógica y las puntuaciones. El cliente solo
-            // responde a comandos de texto que envía el servidor.
             String linea;
             boolean continuar = true;
 
             while (continuar && (linea = entrada.readLine()) != null) {
-                // Mostrar cualquier mensaje no reconocido
+
                 if (linea.equalsIgnoreCase("JUEGA")) {
                     int eleccion = 0;
+
                     while (eleccion < 1 || eleccion > 3) {
                         System.out.print("Elige (1=Piedra, 2=Papel, 3=Tijeras): ");
                         try {
                             eleccion = Integer.parseInt(sc.nextLine().trim());
                         } catch (NumberFormatException ex) {
-                            System.out.println("no se ha introducido un número, por favor introduce un número entre el 1 y el 3");
+                            System.out.println(
+                                "No se ha introducido un número válido (1-3)");
                         }
                     }
-                    // Enviar la jugada como texto para concordar con el servidor
+
                     salida.println(String.valueOf(eleccion));
+
+                } else if (linea.equalsIgnoreCase("HAS_GANADO")) {
+                    System.out.println("🎉 Has ganado la partida");
+                    continuar = false;
+
+                } else if (linea.equalsIgnoreCase("HAS_PERDIDO")) {
+                    System.out.println("💀 Has perdido la partida");
+                    continuar = false;
+
                 } else if (linea.equalsIgnoreCase("ELIMINADO")) {
                     System.out.println("Has sido eliminado de la partida.");
                     continuar = false;
+
                 } else if (linea.equalsIgnoreCase("OPPONENT_DISCONNECTED")) {
                     System.out.println("Tu oponente se ha desconectado.");
-                    // En modo 1vs1 el servidor puede continuar contra el GameHost.
+
                 } else if (linea.startsWith("ERROR:")) {
-                    // Mostrar errores de validación enviados por el servidor tal cual
-                    System.out.println(linea.substring("ERROR:".length()).trim());
+                    System.out.println(
+                        linea.substring("ERROR:".length()).trim());
+
                 } else {
-                    // Mensajes informativos u otros del servidor
                     System.out.println("Servidor: " + linea);
                 }
             }
 
         } catch (IOException e) {
-            System.out.println("❌ No se pudo conectar con el servidor: " + e.getMessage());
+            System.out.println("❌ No se pudo conectar con el servidor: "
+                    + e.getMessage());
         }
 
         sc.close();
